@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="70" onload="document.title = (typeof window.manaSSF==='object' ? 'SIMONS-SVG+BRIDGE' : 'SIMONS-SVG-NOBRIDGE'); try { if (window.manaSSF && window.manaSSF.setBadgeCount) { window.manaSSF.setBadgeCount(777); } } catch(e) {}">
+  <rect width="240" height="70" fill="#111"/>
+  <text x="12" y="40" fill="#0f0" font-family="monospace" font-size="14">SDA SVG probe</text>
+</svg>
