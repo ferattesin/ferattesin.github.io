@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>OG Probe</title>
+<meta property="og:title" content="OG PROBE CARD (Simons/Carter)">
+<meta property="og:description" content="Click-me behavior probe. Eğer bu sayfa SDA İÇİNDE açıldıysa dedektör çalışır.">
+<meta property="og:image" content="https://ferattesin.github.io/marker.png">
+<meta property="og:url" content="https://ferattesin.github.io/ogprobe.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body style="font-family:monospace;background:#111;color:#0f0;padding:16px">
+<h1>OG PROBE</h1>
+<pre id="o">probing...</pre>
+<script>
+  var hasBridge = (typeof window.manaSSF === 'object');
+  document.title = hasBridge ? 'OG+BRIDGE' : 'OG-NOBRIDGE';
+  document.getElementById('o').textContent =
+    "title: " + document.title + "\n" +
+    "origin: " + location.origin + "\n" +
+    "manaSSF: " + typeof window.manaSSF + "\n" +
+    "chrome.webview: " + ((window.chrome && window.chrome.webview) ? 'PRESENT' : 'absent') + "\n" +
+    "userAgent: " + navigator.userAgent;
+</script>
+</body>
+</html>
