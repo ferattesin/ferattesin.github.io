@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>ATTACH PROBE</title></head>
+<body style="font-family:monospace;background:#111;color:#0f0;padding:16px">
+<h1>ATTACH PROBE</h1>
+<pre id="o">running...</pre>
+<script>
+  var hasBridge = (typeof window.manaSSF === 'object');
+  document.title = hasBridge ? 'ATTACH+BRIDGE' : 'ATTACH-NOBRIDGE';
+  var badge = "n/a";
+  try { if (hasBridge && window.manaSSF.setBadgeCount) { window.manaSSF.setBadgeCount(777); badge = "sent(777)"; } } catch(e){ badge = "err:" + e.message; }
+  document.getElementById('o').textContent =
+    "title set: " + document.title + "\n" +
+    "manaSSF: " + typeof window.manaSSF + "\n" +
+    "chrome.webview: " + ((window.chrome && window.chrome.webview) ? "PRESENT" : "absent") + "\n" +
+    "badge: " + badge;
+</script>
+</body>
+</html>
