@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>SDA Deeplink Probe</title>
+<style>body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:900px}a{display:block;margin:10px 0;color:#6cf;font-size:15px}li{margin:6px 0}.warn{color:#f90}</style>
+</head>
+<body>
+<h1>SDA Deeplink Probe (Simons/Carter)</h1>
+<p class="warn">Bu sayfayı VM'deki NORMAL TARAYICIDA aç. Her linke tıklayıp SDA'nın ne yaptığını gözle. Payload'lar benign — sadece davranış gözlemi. (Tarayıcı "Symphony Messaging'i açmak istiyor musunuz?" derse: Aç/Open.)</p>
+<ul>
+<li><a href="symphony://test">1) symphony://test</a></li>
+<li><a href="symphony://">2) symphony:// (boş)</a></li>
+<li><a href="symphony://https://ferattesin.github.io/poc-test/probe.html">3) symphony://https://ferattesin.github.io/poc-test/probe.html</a></li>
+<li><a href="symphony://?url=https%3A%2F%2Fferattesin.github.io%2Fpoc-test%2Fprobe.html">4) symphony://?url=(encoded probe url)</a></li>
+<li><a href="symphony://open?url=https%3A%2F%2Fferattesin.github.io%2Fpoc-test%2Fprobe.html">5) symphony://open?url=...</a></li>
+<li><a href="symphony://open/https://ferattesin.github.io/poc-test/probe.html">6) symphony://open/https://...</a></li>
+<li><a href="symphony://app/https://ferattesin.github.io/poc-test/probe.html">7) symphony://app/https://...</a></li>
+<li><a href="symphony://join?streamId=abcdef123">8) symphony://join?streamId=abcdef123</a></li>
+<li><a href="symphony://profile?userId=1">9) symphony://profile?userId=1</a></li>
+</ul>
+<p><b>Gözlem kriterleri (her link için):</b></p>
+<ul>
+<li>SDA öne geldi mi / yeni pencere açıldı mı?</li>
+<li>SDA'nın SAYFASI değişti mi (pod yerine başka bir şey yüklendi mi)? — ekran görüntüsü!</li>
+<li>Hiçbir şey mi oldu? (Bu da sonuç.)</li>
+<li>Tarayıcı kendi "harici protokol" uyarısını gösterdiyse: metni not al.</li>
+</ul>
+<p><b>Ekstra (opsiyonel):</b> SDA'yı KAPAT → tarayıcıdan bir symphony:// linkine tıkla → SDA açılıyor mu, açılışta ne oluyor? (Soğuk-aktivasyon testi.)</p>
+</body>
+</html>
